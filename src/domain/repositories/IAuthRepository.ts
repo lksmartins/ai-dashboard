@@ -5,6 +5,7 @@ export interface AuthUser {
 
 export interface IAuthRepository {
   getUser(): Promise<AuthUser | null>
-  signInWithGitHub(redirectTo: string): Promise<string>
+  signInWithGitHub(redirectTo: string, failureTo: string): Promise<string>
   signOut(): Promise<void>
+  getAccessToken(): Promise<string | null>
 }
