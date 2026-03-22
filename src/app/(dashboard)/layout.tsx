@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/infrastructure/supabase/server'
+import { createSessionClient } from '@/infrastructure/appwrite/server'
 import { AUTH_REPOSITORY } from '@/infrastructure/di/container'
 import { GetUserUseCase } from '@/application/use-cases/GetUserUseCase'
 
@@ -8,8 +8,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const client = await createClient()
-  const authRepository = new AUTH_REPOSITORY(client)
+  const { account } = await createSessionClient()
+  const authRepository = new AUTH_REPOSITORY(account)
   const user = await new GetUserUseCase(authRepository).execute()
 
   if (!user) redirect('/auth/login')
