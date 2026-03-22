@@ -7,7 +7,8 @@ export async function createSessionClient() {
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
 
   const cookieStore = await cookies()
-  const sessionCookie = cookieStore.getAll().find(c => c.name.startsWith('a_session_'))
+  const sessionKey = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!}`
+  const sessionCookie = cookieStore.get(sessionKey)
 
   if (sessionCookie) {
     client.setSession(sessionCookie.value)
@@ -20,10 +21,14 @@ export async function createSessionClient() {
 }
 
 export function createAdminClient() {
+  if (!process.env.APPWRITE_API_KEY) {
+    throw new Error('APPWRITE_API_KEY is not set')
+  }
+
   const client = new Client()
     .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-    .setKey(process.env.APPWRITE_API_KEY!)
+    .setKey(process.env.APPWRITE_API_KEY)
 
   return {
     account: new Account(client),
