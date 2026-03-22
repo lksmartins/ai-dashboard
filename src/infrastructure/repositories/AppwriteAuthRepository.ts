@@ -20,13 +20,18 @@ export class AppwriteAuthRepository implements IAuthRepository {
   }
 
   async signInWithGitHub(redirectTo: string, failureTo: string): Promise<string> {
-    // createOAuth2Token is a node-appwrite server-side method that returns
-    // a redirect URL string without triggering a browser redirect.
-    // Only called from server actions — never from browser context.
-    const account = this.account as unknown as {
-      createOAuth2Token(provider: string, success: string, failure: string, scopes: string[]): Promise<string>
-    }
-    return account.createOAuth2Token('github', redirectTo, failureTo, ['repo'])
+    // Construct the createOAuth2Session URL manually so the redirect_uri sent to
+    // GitHub matches /account/sessions/oauth2/callback/... (the registered path).
+    // createOAuth2Token uses a different callback path and would require a separate
+    // GitHub OAuth app registration.
+    const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!
+    const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!
+    const url = new URL(`${endpoint}/account/sessions/oauth2/github`)
+    url.searchParams.set('project', project)
+    url.searchParams.set('success', redirectTo)
+    url.searchParams.set('failure', failureTo)
+    url.searchParams.append('scopes[]', 'repo')
+    return url.toString()
   }
 
   async signOut(): Promise<void> {
