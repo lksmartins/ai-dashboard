@@ -8,7 +8,7 @@ import { SignInWithGitHubUseCase } from '@/application/use-cases/SignInWithGitHu
 import { SignOutUseCase } from '@/application/use-cases/SignOutUseCase'
 
 export async function signInWithGitHub() {
-  const origin = (await headers()).get('origin')
+  const origin = (await headers()).get('origin') ?? ''
   const { account } = createAdminClient()
   const authRepository = new AUTH_REPOSITORY(account)
   const url = await new SignInWithGitHubUseCase(authRepository).execute(
