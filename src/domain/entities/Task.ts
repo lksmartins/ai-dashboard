@@ -1,4 +1,3 @@
-import { TaskPriority } from './TaskPriority'
 import { TaskStatus } from './TaskStatus'
 
 export interface CreateTaskInput {
