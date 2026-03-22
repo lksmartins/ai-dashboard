@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Task, CreateTaskInput } from '@/domain/entities/Task'
-import { createClient } from '@/infrastructure/supabase/client'
-import { SupabaseTaskRepository } from '@/infrastructure/repositories/SupabaseTaskRepository'
+import { createBrowserClient, createBrowserDatabases } from '@/infrastructure/appwrite/client'
+import { TASK_REPOSITORY } from '@/infrastructure/di/container'
 import { GetTasksUseCase } from '@/application/use-cases/GetTasksUseCase'
 import { CreateTaskUseCase } from '@/application/use-cases/CreateTaskUseCase'
 import { UpdateTaskUseCase, UpdateTaskChanges } from '@/application/use-cases/UpdateTaskUseCase'
@@ -15,7 +15,7 @@ export function useTasks() {
   const [error, setError] = useState<string | null>(null)
 
   const repository = useMemo(
-    () => new SupabaseTaskRepository(createClient()),
+    () => new TASK_REPOSITORY(createBrowserDatabases(createBrowserClient())),
     []
   )
 

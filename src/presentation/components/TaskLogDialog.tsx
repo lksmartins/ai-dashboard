@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Task } from '@/domain/entities/Task'
 import { TaskLog } from '@/domain/entities/TaskLog'
-import { createClient } from '@/infrastructure/supabase/client'
+import { createBrowserClient, createBrowserDatabases } from '@/infrastructure/appwrite/client'
 import { TASK_LOG_REPOSITORY } from '@/infrastructure/di/container'
 import { GetTaskLogsUseCase } from '@/application/use-cases/GetTaskLogsUseCase'
 import {
@@ -24,8 +24,7 @@ export default function TaskLogDialog({ task, onClose }: TaskLogDialogProps) {
 
     const fetchLogs = async () => {
       setLoading(true)
-      const client = createClient()
-      const taskLogRepository = new TASK_LOG_REPOSITORY(client)
+      const taskLogRepository = new TASK_LOG_REPOSITORY(createBrowserDatabases(createBrowserClient()))
       const result = await new GetTaskLogsUseCase(taskLogRepository).execute(task.id)
       setLogs(result)
       setLoading(false)

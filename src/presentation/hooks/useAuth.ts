@@ -1,31 +1,27 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User } from '@supabase/supabase-js'
-import { createClient } from '@/infrastructure/supabase/client'
+import { AuthUser } from '@/domain/repositories/IAuthRepository'
+import { createBrowserClient, createBrowserAccount } from '@/infrastructure/appwrite/client'
+import { AUTH_REPOSITORY } from '@/infrastructure/di/container'
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const client = createClient()
+    const account = createBrowserAccount(createBrowserClient())
+    const authRepository = new AUTH_REPOSITORY(account)
 
-    client.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setAccessToken(session?.provider_token ?? null)
+    Promise.all([
+      authRepository.getUser(),
+      authRepository.getAccessToken(),
+    ]).then(([u, t]) => {
+      setUser(u)
+      setAccessToken(t)
       setLoading(false)
     })
-
-    const { data: { subscription } } = client.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
-        setAccessToken(session?.provider_token ?? null)
-      }
-    )
-
-    return () => subscription.unsubscribe()
   }, [])
 
   return { user, accessToken, loading }
