@@ -1,7 +1,7 @@
-import { SupabaseAuthRepository } from '@/infrastructure/repositories/SupabaseAuthRepository'
-import { SupabaseTaskRepository } from '@/infrastructure/repositories/SupabaseTaskRepository'
-import { SupabaseTaskLogRepository } from '@/infrastructure/repositories/SupabaseTaskLogRepository'
+import { AppwriteAuthRepository } from '@/infrastructure/repositories/AppwriteAuthRepository'
+import { AppwriteTaskRepository } from '@/infrastructure/repositories/AppwriteTaskRepository'
+import { AppwriteTaskLogRepository } from '@/infrastructure/repositories/AppwriteTaskLogRepository'
 
-export const AUTH_REPOSITORY = SupabaseAuthRepository
-export const TASK_REPOSITORY = SupabaseTaskRepository
-export const TASK_LOG_REPOSITORY = SupabaseTaskLogRepository
+export const AUTH_REPOSITORY = AppwriteAuthRepository
+export const TASK_REPOSITORY = AppwriteTaskRepository
+export const TASK_LOG_REPOSITORY = AppwriteTaskLogRepository
