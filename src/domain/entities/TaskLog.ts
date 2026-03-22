@@ -1,10 +1,9 @@
-import { randomUUID } from 'crypto'
-
 interface TaskLogProps {
   id: string
   taskId: string
   message: string
   createdAt: Date
+  updatedAt: Date
 }
 
 export class TaskLog {
@@ -12,15 +11,6 @@ export class TaskLog {
 
   private constructor(props: TaskLogProps) {
     this.props = { ...props }
-  }
-
-  static create(taskId: string, message: string): TaskLog {
-    return new TaskLog({
-      id: randomUUID(),
-      taskId,
-      message,
-      createdAt: new Date(),
-    })
   }
 
   static build(props: TaskLogProps): TaskLog {
@@ -31,6 +21,7 @@ export class TaskLog {
   get taskId(): string { return this.props.taskId }
   get message(): string { return this.props.message }
   get createdAt(): Date { return this.props.createdAt }
+  get updatedAt(): Date { return this.props.updatedAt }
 
   toObject(): TaskLogProps {
     return { ...this.props }

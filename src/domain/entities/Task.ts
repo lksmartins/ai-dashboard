@@ -16,6 +16,7 @@ interface TaskProps {
   repository: string
   status: string
   createdAt: Date
+  updatedAt: Date
   completedAt: Date | null
 }
 
@@ -28,6 +29,7 @@ export class Task {
 
   /** Creates a new pending task */
   static create(input: CreateTaskInput): Task {
+    const now = new Date()
     return new Task({
       id: globalThis.crypto.randomUUID(),
       title: input.title,
@@ -35,7 +37,8 @@ export class Task {
       priority: input.priority,
       repository: input.repository,
       status: TaskStatus.PENDING,
-      createdAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
       completedAt: null,
     })
   }
@@ -52,16 +55,18 @@ export class Task {
   get repository(): string { return this.props.repository }
   get status(): string { return this.props.status }
   get createdAt(): Date { return this.props.createdAt }
+  get updatedAt(): Date { return this.props.updatedAt }
   get completedAt(): Date | null { return this.props.completedAt }
   get isPending(): boolean { return this.props.status === TaskStatus.PENDING }
   get isComplete(): boolean { return this.props.status === TaskStatus.COMPLETE }
 
   update(changes: Partial<Pick<TaskProps, 'title' | 'description' | 'priority' | 'repository'>>): Task {
-    return new Task({ ...this.props, ...changes })
+    return new Task({ ...this.props, ...changes, updatedAt: new Date() })
   }
 
   complete(): Task {
-    return new Task({ ...this.props, status: TaskStatus.COMPLETE, completedAt: new Date() })
+    const now = new Date()
+    return new Task({ ...this.props, status: TaskStatus.COMPLETE, completedAt: now, updatedAt: now })
   }
 
   toObject(): TaskProps {
