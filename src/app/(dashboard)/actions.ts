@@ -1,6 +1,7 @@
 'use server'
 
-import { createAdminClient, createSessionClient } from '@/infrastructure/appwrite/server'
+import { cookies } from 'next/headers'
+import { createAdminClient } from '@/infrastructure/appwrite/server'
 import { Query } from 'node-appwrite'
 
 export interface TaskLogData {
@@ -17,12 +18,9 @@ export async function triggerTaskRunner(): Promise<{ ok: boolean; error?: string
     return { ok: false, error: 'TASKS_PROCESSOR_URL is not configured' }
   }
 
-  const { account } = await createSessionClient()
-  let jwt: string
-  try {
-    const result = await account.createJWT()
-    jwt = result.jwt
-  } catch {
+  const cookieStore = await cookies()
+  const jwt = cookieStore.get('appwrite_jwt')?.value
+  if (!jwt) {
     return { ok: false, needsRefresh: true, error: 'Session expired — refreshing…' }
   }
 
@@ -38,6 +36,7 @@ export async function triggerTaskRunner(): Promise<{ ok: boolean; error?: string
   }
 
   if (res.status === 409) return { ok: true } // already running — treat as success
+  if (res.status === 401) return { ok: false, needsRefresh: true, error: 'Session expired — refreshing…' }
   if (!res.ok) {
     const body = await res.text().catch(() => '')
     return { ok: false, error: `Task runner returned ${res.status}: ${body}` }
