@@ -52,13 +52,13 @@ export async function getTaskLogs(taskId: string): Promise<TaskLogData[]> {
   const collectionId = process.env.NEXT_PUBLIC_APPWRITE_TASK_LOGS_COLLECTION_ID!
 
   const response = await databases.listDocuments(databaseId, collectionId, [
-    Query.equal('taskId', taskId),
+    Query.equal('task_id', taskId),
     Query.orderAsc('$createdAt'),
   ])
 
   return response.documents.map(doc => ({
     id: doc.$id,
-    taskId: doc['taskId'] as string,
+    taskId: doc['task_id'] as string,
     message: doc['message'] as string,
     createdAt: doc.$createdAt,
     updatedAt: doc.$updatedAt,

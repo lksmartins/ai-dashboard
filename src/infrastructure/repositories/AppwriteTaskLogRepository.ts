@@ -5,7 +5,7 @@ import { TaskLog } from '@/domain/entities/TaskLog'
 function toTaskLog(doc: Record<string, unknown>): TaskLog {
   return TaskLog.build({
     id: doc.$id as string,
-    taskId: doc.taskId as string,
+    taskId: doc.task_id as string,
     message: doc.message as string,
     createdAt: new Date(doc.$createdAt as string),
     updatedAt: new Date(doc.$updatedAt as string),
@@ -23,7 +23,7 @@ export class AppwriteTaskLogRepository implements ITaskLogRepository {
       this.databaseId,
       this.collectionId,
       [
-        Query.equal('taskId', taskId),
+        Query.equal('task_id', taskId),
         Query.orderAsc('$createdAt'),
       ]
     )
