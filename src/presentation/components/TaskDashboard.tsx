@@ -6,7 +6,7 @@ import { TaskStatus } from '@/domain/entities/TaskStatus'
 import { useAuth } from '@/presentation/hooks/useAuth'
 import { useTasks } from '@/presentation/hooks/useTasks'
 import { useGitHubRepos } from '@/presentation/hooks/useGitHubRepos'
-import { createBrowserAccount, createBrowserClient } from '@/infrastructure/appwrite/client'
+import { triggerTaskRunner } from '@/app/(dashboard)/actions'
 import Header from './Header'
 import TaskList from './TaskList'
 import TaskFormDialog from './TaskFormDialog'
@@ -34,19 +34,20 @@ export default function TaskDashboard() {
   const [viewingDoneTask, setViewingDoneTask] = useState<Task | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [running, setRunning] = useState(false)
+  const [runError, setRunError] = useState<string | null>(null)
 
   async function runTasks() {
     setRunning(true)
+    setRunError(null)
     try {
-      const account = createBrowserAccount(createBrowserClient())
-      const { jwt } = await account.createJWT()
-      await fetch('https://srv1469719.hstgr.cloud/ai-task-runner/run', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${jwt}` },
-      })
+      const result = await triggerTaskRunner()
+      if (!result.ok) {
+        setRunError(result.error ?? 'Unknown error')
+        return
+      }
+      window.location.reload()
     } finally {
       setRunning(false)
-      window.location.reload()
     }
   }
 
@@ -88,11 +89,16 @@ export default function TaskDashboard() {
                 )}
               </TabsTrigger>
             </TabsList>
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={runTasks} disabled={running}>
-                {running ? 'Running…' : 'Run tasks'}
-              </Button>
-              <Button onClick={openCreate}>New task</Button>
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={runTasks} disabled={running}>
+                  {running ? 'Running…' : 'Run tasks'}
+                </Button>
+                <Button onClick={openCreate}>New task</Button>
+              </div>
+              {runError && (
+                <p className="text-sm text-destructive">{runError}</p>
+              )}
             </div>
           </div>
 
