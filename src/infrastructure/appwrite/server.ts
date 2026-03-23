@@ -7,11 +7,10 @@ export async function createSessionClient() {
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
 
   const cookieStore = await cookies()
-  const sessionKey = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!}`
-  const sessionCookie = cookieStore.get(sessionKey)
+  const jwtCookie = cookieStore.get('appwrite_jwt')
 
-  if (sessionCookie) {
-    client.setSession(sessionCookie.value)
+  if (jwtCookie) {
+    client.setJWT(jwtCookie.value)
   }
 
   return {

@@ -20,10 +20,11 @@ export class AppwriteAuthRepository implements IAuthRepository {
   }
 
   async signInWithGitHub(redirectTo: string, failureTo: string): Promise<string> {
-    // Construct the createOAuth2Session URL manually so the redirect_uri sent to
-    // GitHub matches /account/sessions/oauth2/callback/... (the registered path).
-    // createOAuth2Token uses a different callback path and would require a separate
-    // GitHub OAuth app registration.
+    // Use createOAuth2Session. After GitHub authenticates, Appwrite sets the session
+    // cookie on its own domain and redirects to redirectTo. The /auth/callback page
+    // (client-side) then calls account.createJWT() — which works because the browser
+    // sends the Appwrite domain cookie — and stores the JWT on the Next.js domain so
+    // server components can authenticate via client.setJWT().
     const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!
     const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!
     const url = new URL(`${endpoint}/account/sessions/oauth2/github`)

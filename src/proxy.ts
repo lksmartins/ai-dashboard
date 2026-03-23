@@ -1,11 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
-  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ?? ''
-  const sessionKey = `a_session_${projectId}`
-  const sessionCookie = request.cookies.get(sessionKey)
-
-  const isAuthenticated = Boolean(sessionCookie?.value)
+  const isAuthenticated = Boolean(request.cookies.get('appwrite_jwt')?.value)
 
   if (!isAuthenticated && !request.nextUrl.pathname.startsWith('/auth')) {
     const loginUrl = request.nextUrl.clone()
