@@ -6,6 +6,7 @@ import { TaskStatus } from '@/domain/entities/TaskStatus'
 import { useAuth } from '@/presentation/hooks/useAuth'
 import { useTasks } from '@/presentation/hooks/useTasks'
 import { useGitHubRepos } from '@/presentation/hooks/useGitHubRepos'
+import { createBrowserAccount, createBrowserClient } from '@/infrastructure/appwrite/client'
 import Header from './Header'
 import TaskList from './TaskList'
 import TaskFormDialog from './TaskFormDialog'
@@ -37,7 +38,12 @@ export default function TaskDashboard() {
   async function runTasks() {
     setRunning(true)
     try {
-      await fetch('https://srv1469719.hstgr.cloud/ai-task-runner/run')
+      const account = createBrowserAccount(createBrowserClient())
+      const { jwt } = await account.createJWT()
+      await fetch('https://srv1469719.hstgr.cloud/ai-task-runner/run', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${jwt}` },
+      })
     } finally {
       setRunning(false)
       window.location.reload()
