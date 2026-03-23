@@ -18,16 +18,24 @@ interface TaskLogDialogProps {
 export default function TaskLogDialog({ task, onClose }: TaskLogDialogProps) {
   const [logs, setLogs] = useState<TaskLog[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!task) return
 
     const fetchLogs = async () => {
       setLoading(true)
-      const taskLogRepository = new TASK_LOG_REPOSITORY(createBrowserDatabases(createBrowserClient()))
-      const result = await new GetTaskLogsUseCase(taskLogRepository).execute(task.id)
-      setLogs(result)
-      setLoading(false)
+      setLogs([])
+      setError(null)
+      try {
+        const taskLogRepository = new TASK_LOG_REPOSITORY(createBrowserDatabases(createBrowserClient()))
+        const result = await new GetTaskLogsUseCase(taskLogRepository).execute(task.id)
+        setLogs(result)
+      } catch {
+        setError('Failed to load logs.')
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchLogs()
@@ -42,7 +50,11 @@ export default function TaskLogDialog({ task, onClose }: TaskLogDialogProps) {
 
         {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
 
-        {!loading && logs.length === 0 && (
+        {!loading && error && (
+          <p className="text-sm text-destructive">{error}</p>
+        )}
+
+        {!loading && !error && logs.length === 0 && (
           <p className="text-sm text-muted-foreground">No logs yet.</p>
         )}
 
