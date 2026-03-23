@@ -123,6 +123,7 @@ export default function TaskFormDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={TaskStatus.PENDING}>Pending</SelectItem>
+                <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
                 <SelectItem value={TaskStatus.COMPLETE}>Complete</SelectItem>
               </SelectContent>
             </Select>

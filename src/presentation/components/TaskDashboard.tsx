@@ -60,8 +60,9 @@ export default function TaskDashboard() {
     setFormOpen(true)
   }
 
-  const pendingTasks = tasks.filter(t => t.status !== TaskStatus.COMPLETE)
-  const doneTasks = tasks.filter(t => t.status === TaskStatus.COMPLETE)
+  const doneStatuses = [TaskStatus.DONE, TaskStatus.COMPLETE]
+  const pendingTasks = tasks.filter(t => !doneStatuses.includes(t.status))
+  const doneTasks = tasks.filter(t => doneStatuses.includes(t.status))
 
   return (
     <div className="min-h-screen flex flex-col">
