@@ -73,8 +73,8 @@ export default function TaskDashboard() {
         )}
 
         <Tabs defaultValue="tasks">
-          <div className="flex items-center justify-between mb-6">
-            <TabsList>
+          <div className="mb-6">
+            <TabsList className="mb-4">
               <TabsTrigger value="tasks">
                 Tasks
                 {!loading && pendingTasks.length > 0 && (
@@ -88,7 +88,7 @@ export default function TaskDashboard() {
                 )}
               </TabsTrigger>
             </TabsList>
-            <div className="flex gap-2">
+            <div className="flex justify-between">
               <Button variant="outline" onClick={runTasks} disabled={running}>
                 {running ? 'Running…' : 'Run tasks'}
               </Button>
