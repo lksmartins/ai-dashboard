@@ -32,6 +32,17 @@ export default function TaskDashboard() {
   const [viewingLogsTask, setViewingLogsTask] = useState<Task | null>(null)
   const [viewingDoneTask, setViewingDoneTask] = useState<Task | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [running, setRunning] = useState(false)
+
+  async function runTasks() {
+    setRunning(true)
+    try {
+      await fetch('https://srv1469719.hstgr.cloud/ai-task-runner/run')
+    } finally {
+      setRunning(false)
+      window.location.reload()
+    }
+  }
 
   function openCreate() {
     setEditingTask(null)
@@ -70,7 +81,12 @@ export default function TaskDashboard() {
                 )}
               </TabsTrigger>
             </TabsList>
-            <Button onClick={openCreate}>New task</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={runTasks} disabled={running}>
+                {running ? 'Running…' : 'Run tasks'}
+              </Button>
+              <Button onClick={openCreate}>New task</Button>
+            </div>
           </div>
 
           <TabsContent value="tasks">
