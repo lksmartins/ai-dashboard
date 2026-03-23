@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserAccount, createBrowserClient } from '@/infrastructure/appwrite/client'
 import { setSessionJwt } from '@/app/auth/actions'
 
-export default function RefreshPage() {
+function RefreshInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -25,4 +25,12 @@ export default function RefreshPage() {
   }, [router, searchParams])
 
   return <p className="p-8 text-sm text-muted-foreground">Refreshing session…</p>
+}
+
+export default function RefreshPage() {
+  return (
+    <Suspense fallback={<p className="p-8 text-sm text-muted-foreground">Refreshing session…</p>}>
+      <RefreshInner />
+    </Suspense>
+  )
 }

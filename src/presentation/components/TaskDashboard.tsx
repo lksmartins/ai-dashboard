@@ -1,18 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback } from 'react'
 import { Task } from '@/domain/entities/Task'
 import { TaskStatus } from '@/domain/entities/TaskStatus'
 import { useAuth } from '@/presentation/hooks/useAuth'
 import { useTasks } from '@/presentation/hooks/useTasks'
 import { useGitHubRepos } from '@/presentation/hooks/useGitHubRepos'
+import { useSearchParams } from 'next/navigation'
 import { triggerTaskRunner } from '@/app/(dashboard)/actions'
 import Header from './Header'
 import TaskList from './TaskList'
 import TaskFormDialog from './TaskFormDialog'
 import TaskLogDialog from './TaskLogDialog'
 import DoneTaskDialog from './DoneTaskDialog'
-import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,6 +25,17 @@ const priorityVariant: Record<string, 'destructive' | 'default' | 'secondary'> =
   [TaskPriority.LOW]: 'secondary',
 }
 
+function AutoRunTrigger({ onRun }: { onRun: () => void }) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('autoRun') === '1') {
+      window.history.replaceState({}, '', '/')
+      onRun()
+    }
+  }, [searchParams, onRun])
+  return null
+}
+
 export default function TaskDashboard() {
   const { accessToken } = useAuth()
   const { tasks, loading, error, create, update, remove } = useTasks()
@@ -34,7 +45,6 @@ export default function TaskDashboard() {
   const [viewingLogsTask, setViewingLogsTask] = useState<Task | null>(null)
   const [viewingDoneTask, setViewingDoneTask] = useState<Task | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const searchParams = useSearchParams()
   const [running, setRunning] = useState(false)
   const [runError, setRunError] = useState<string | null>(null)
 
@@ -57,13 +67,6 @@ export default function TaskDashboard() {
     }
   }, [])
 
-  useEffect(() => {
-    if (searchParams.get('autoRun') === '1') {
-      window.history.replaceState({}, '', '/')
-      runTasks()
-    }
-  }, [searchParams, runTasks])
-
   function openCreate() {
     setEditingTask(null)
     setFormOpen(true)
@@ -80,6 +83,7 @@ export default function TaskDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Suspense><AutoRunTrigger onRun={runTasks} /></Suspense>
       <Header />
       <main className="flex-1 px-6 py-8 max-w-4xl mx-auto w-full">
         {error && (
