@@ -59,8 +59,16 @@ export class Task {
   get isPending(): boolean { return this.props.status === TaskStatus.PENDING }
   get isComplete(): boolean { return this.props.status === TaskStatus.COMPLETE }
 
-  update(changes: Partial<Pick<TaskProps, 'title' | 'description' | 'priority' | 'repository'>>): Task {
-    return new Task({ ...this.props, ...changes, updatedAt: new Date() })
+  update(changes: Partial<Pick<TaskProps, 'title' | 'description' | 'priority' | 'repository' | 'status'>>): Task {
+    const now = new Date()
+    const newStatus = changes.status ?? this.props.status
+    const completedAt =
+      newStatus === TaskStatus.COMPLETE
+        ? (this.props.completedAt ?? now)
+        : newStatus === TaskStatus.PENDING
+          ? null
+          : this.props.completedAt
+    return new Task({ ...this.props, ...changes, completedAt, updatedAt: now })
   }
 
   complete(): Task {

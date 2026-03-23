@@ -6,6 +6,7 @@ export interface UpdateTaskChanges {
   description?: string
   priority?: string
   repository?: string
+  status?: string
 }
 
 export interface UpdateTaskInput {
