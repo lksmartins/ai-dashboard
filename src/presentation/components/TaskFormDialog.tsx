@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Task, CreateTaskInput } from '@/domain/entities/Task'
 import { TaskPriority } from '@/domain/entities/TaskPriority'
+import { TaskStatus } from '@/domain/entities/TaskStatus'
 import { GitHubRepo } from '@/application/services/IGitHubService'
 import { UpdateTaskChanges } from '@/application/use-cases/UpdateTaskUseCase'
 import {
@@ -37,6 +38,7 @@ const emptyForm = {
   description: '',
   priority: TaskPriority.MEDIUM,
   repository: '',
+  status: TaskStatus.PENDING,
 }
 
 export default function TaskFormDialog({
@@ -53,6 +55,7 @@ export default function TaskFormDialog({
         description: task.description,
         priority: task.priority,
         repository: task.repository,
+        status: task.status,
       })
     } else {
       setForm(emptyForm)
@@ -109,6 +112,21 @@ export default function TaskFormDialog({
               <SelectItem value={TaskPriority.LOW}>Low</SelectItem>
             </SelectContent>
           </Select>
+
+          {task && (
+            <Select
+              value={form.status}
+              onValueChange={(val) => { if (val) setForm(f => ({ ...f, status: val })) }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TaskStatus.PENDING}>Pending</SelectItem>
+                <SelectItem value={TaskStatus.COMPLETE}>Complete</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           <Popover open={repoOpen} onOpenChange={setRepoOpen}>
             <PopoverTrigger className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none">
