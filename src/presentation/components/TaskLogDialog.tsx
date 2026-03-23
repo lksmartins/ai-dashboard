@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Task } from '@/domain/entities/Task'
 import { TaskLog } from '@/domain/entities/TaskLog'
-import { createBrowserClient, createBrowserDatabases } from '@/infrastructure/appwrite/client'
-import { TASK_LOG_REPOSITORY } from '@/infrastructure/di/container'
-import { GetTaskLogsUseCase } from '@/application/use-cases/GetTaskLogsUseCase'
+import { getTaskLogs } from '@/app/(dashboard)/actions'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -28,9 +26,14 @@ export default function TaskLogDialog({ task, onClose }: TaskLogDialogProps) {
       setLogs([])
       setError(null)
       try {
-        const taskLogRepository = new TASK_LOG_REPOSITORY(createBrowserDatabases(createBrowserClient()))
-        const result = await new GetTaskLogsUseCase(taskLogRepository).execute(task.id)
-        setLogs(result)
+        const result = await getTaskLogs(task.id)
+        setLogs(result.map(d => TaskLog.build({
+          id: d.id,
+          taskId: d.taskId,
+          message: d.message,
+          createdAt: new Date(d.createdAt),
+          updatedAt: new Date(d.updatedAt),
+        })))
       } catch {
         setError('Failed to load logs.')
       } finally {
