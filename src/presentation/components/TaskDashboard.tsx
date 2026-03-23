@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Task } from '@/domain/entities/Task'
 import { TaskStatus } from '@/domain/entities/TaskStatus'
 import { useAuth } from '@/presentation/hooks/useAuth'
@@ -12,6 +12,7 @@ import TaskList from './TaskList'
 import TaskFormDialog from './TaskFormDialog'
 import TaskLogDialog from './TaskLogDialog'
 import DoneTaskDialog from './DoneTaskDialog'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -33,17 +34,18 @@ export default function TaskDashboard() {
   const [viewingLogsTask, setViewingLogsTask] = useState<Task | null>(null)
   const [viewingDoneTask, setViewingDoneTask] = useState<Task | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const searchParams = useSearchParams()
   const [running, setRunning] = useState(false)
   const [runError, setRunError] = useState<string | null>(null)
 
-  async function runTasks() {
+  const runTasks = useCallback(async () => {
     setRunning(true)
     setRunError(null)
     try {
       const result = await triggerTaskRunner()
       if (!result.ok) {
         if (result.needsRefresh) {
-          window.location.href = '/auth/refresh'
+          window.location.href = '/auth/refresh?autoRun=1'
           return
         }
         setRunError(result.error ?? 'Unknown error')
@@ -53,7 +55,14 @@ export default function TaskDashboard() {
     } finally {
       setRunning(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (searchParams.get('autoRun') === '1') {
+      window.history.replaceState({}, '', '/')
+      runTasks()
+    }
+  }, [searchParams, runTasks])
 
   function openCreate() {
     setEditingTask(null)
