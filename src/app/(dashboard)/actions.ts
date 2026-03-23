@@ -11,7 +11,7 @@ export interface TaskLogData {
   updatedAt: string
 }
 
-export async function triggerTaskRunner(): Promise<{ ok: boolean; error?: string }> {
+export async function triggerTaskRunner(): Promise<{ ok: boolean; error?: string; needsRefresh?: boolean }> {
   const runnerUrl = process.env.TASKS_PROCESSOR_URL
   if (!runnerUrl) {
     return { ok: false, error: 'TASKS_PROCESSOR_URL is not configured' }
@@ -23,7 +23,7 @@ export async function triggerTaskRunner(): Promise<{ ok: boolean; error?: string
     const result = await account.createJWT()
     jwt = result.jwt
   } catch {
-    return { ok: false, error: 'Failed to create session token — are you logged in?' }
+    return { ok: false, needsRefresh: true, error: 'Session expired — refreshing…' }
   }
 
   let res: Response

@@ -42,6 +42,10 @@ export default function TaskDashboard() {
     try {
       const result = await triggerTaskRunner()
       if (!result.ok) {
+        if (result.needsRefresh) {
+          window.location.href = '/auth/refresh'
+          return
+        }
         setRunError(result.error ?? 'Unknown error')
         return
       }
