@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Source_Code_Pro } from "next/font/google";
+import { RegisterSW } from "@/components/register-sw";
 import "./globals.css";
 
 const sourceCodePro = Source_Code_Pro({
@@ -11,6 +12,15 @@ const sourceCodePro = Source_Code_Pro({
 export const metadata: Metadata = {
   title: "AI Dashboard",
   description: "AI-powered task management",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AI Dashboard",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({
@@ -22,6 +32,7 @@ export default function RootLayout({
     <html lang="en" className={`dark ${sourceCodePro.variable}`}>
       <body className="antialiased">
         {children}
+        <RegisterSW />
       </body>
     </html>
   );
