@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Task, CreateTaskInput } from '@/domain/entities/Task'
 import { TaskPriority } from '@/domain/entities/TaskPriority'
 import { TaskStatus } from '@/domain/entities/TaskStatus'
@@ -41,6 +41,30 @@ const emptyForm = {
   status: TaskStatus.PENDING,
 }
 
+const DRAFT_STORAGE_KEY = 'task-form-draft'
+
+function loadDraft(): typeof emptyForm | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed.title === 'string') return { ...emptyForm, ...parsed }
+  } catch { /* ignore corrupt data */ }
+  return null
+}
+
+function saveDraft(form: typeof emptyForm) {
+  try {
+    const { status, ...draft } = form
+    void status
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
+  } catch { /* storage full or unavailable */ }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_STORAGE_KEY) } catch { /* ignore */ }
+}
+
 export default function TaskFormDialog({
   open, task, repos, onClose, onCreate, onUpdate,
 }: TaskFormDialogProps) {
@@ -58,9 +82,20 @@ export default function TaskFormDialog({
         status: task.status,
       })
     } else {
-      setForm(emptyForm)
+      setForm(loadDraft() ?? emptyForm)
     }
   }, [task, open])
+
+  const updateForm = useCallback(
+    (updater: (prev: typeof emptyForm) => typeof emptyForm) => {
+      setForm(prev => {
+        const next = updater(prev)
+        if (!task) saveDraft(next)
+        return next
+      })
+    },
+    [task],
+  )
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -70,6 +105,7 @@ export default function TaskFormDialog({
         await onUpdate(task.id, form)
       } else {
         await onCreate(form)
+        clearDraft()
       }
       onClose()
     } finally {
@@ -88,20 +124,20 @@ export default function TaskFormDialog({
           <Input
             placeholder="Title"
             value={form.title}
-            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            onChange={e => updateForm(f => ({ ...f, title: e.target.value }))}
             required
           />
 
           <Textarea
             placeholder="Description"
             value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+            onChange={e => updateForm(f => ({ ...f, description: e.target.value }))}
             rows={3}
           />
 
           <Select
             value={form.priority}
-            onValueChange={(val) => { if (val) setForm(f => ({ ...f, priority: val })) }}
+            onValueChange={(val) => { if (val) updateForm(f => ({ ...f, priority: val })) }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Priority" />
@@ -116,7 +152,7 @@ export default function TaskFormDialog({
           {task && (
             <Select
               value={form.status}
-              onValueChange={(val) => { if (val) setForm(f => ({ ...f, status: val })) }}
+              onValueChange={(val) => { if (val) updateForm(f => ({ ...f, status: val })) }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
@@ -145,7 +181,7 @@ export default function TaskFormDialog({
                         key={repo.id}
                         value={repo.fullName}
                         onSelect={(val) => {
-                          setForm(f => ({ ...f, repository: val }))
+                          updateForm(f => ({ ...f, repository: val }))
                           setRepoOpen(false)
                         }}
                       >
