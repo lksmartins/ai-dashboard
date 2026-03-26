@@ -1,19 +1,11 @@
 const CACHE_NAME = "ai-dashboard-v1";
 
-const STATIC_ASSETS = [
-  "/",
-  "/auth/login",
-];
-
-// Install: cache static assets
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+// Install: activate immediately, no precaching of dynamic routes
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
+// Activate: clean up old caches and claim clients
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -37,11 +29,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first for API routes and auth
+  // Network-only for API routes and auth
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(request))
-    );
     return;
   }
 
@@ -52,8 +41,10 @@ self.addEventListener("fetch", (event) => {
         (cached) =>
           cached ||
           fetch(request).then((response) => {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
             return response;
           })
       )
@@ -61,12 +52,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first for everything else (pages)
+  // Network-first for pages, cache as fallback
   event.respondWith(
     fetch(request)
       .then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
         return response;
       })
       .catch(() => caches.match(request))
