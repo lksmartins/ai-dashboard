@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback, useMemo } from 'react'
 import { Task } from '@/domain/entities/Task'
 import { TaskStatus } from '@/domain/entities/TaskStatus'
 import { useAuth } from '@/presentation/hooks/useAuth'
@@ -17,7 +17,51 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TaskPriority } from '@/domain/entities/TaskPriority'
+
+type SortField = 'status' | 'priority' | 'createdAt'
+
+const STATUS_ORDER: Record<string, number> = {
+  [TaskStatus.PENDING]: 0,
+  [TaskStatus.DONE]: 1,
+  [TaskStatus.COMPLETE]: 2,
+}
+
+const PRIORITY_ORDER: Record<string, number> = {
+  [TaskPriority.HIGHEST]: 0,
+  [TaskPriority.HIGH]: 1,
+  [TaskPriority.MEDIUM]: 2,
+  [TaskPriority.LOW]: 3,
+}
+
+function compareBy(a: Task, b: Task, field: SortField): number {
+  switch (field) {
+    case 'status':
+      return (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
+    case 'priority':
+      return (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99)
+    case 'createdAt':
+      return b.createdAt.getTime() - a.createdAt.getTime()
+  }
+}
+
+const SORT_CHAINS: Record<SortField, SortField[]> = {
+  status: ['status', 'priority', 'createdAt'],
+  priority: ['priority', 'status', 'createdAt'],
+  createdAt: ['createdAt', 'status', 'priority'],
+}
+
+function sortTasks(tasks: Task[], primary: SortField): Task[] {
+  const chain = SORT_CHAINS[primary]
+  return [...tasks].sort((a, b) => {
+    for (const field of chain) {
+      const cmp = compareBy(a, b, field)
+      if (cmp !== 0) return cmp
+    }
+    return 0
+  })
+}
 
 const priorityVariant: Record<string, 'destructive' | 'default' | 'secondary'> = {
   [TaskPriority.HIGH]: 'destructive',
@@ -47,6 +91,7 @@ export default function TaskDashboard() {
   const [formOpen, setFormOpen] = useState(false)
   const [running, setRunning] = useState(false)
   const [runError, setRunError] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<SortField>('status')
 
   const runTasks = useCallback(async () => {
     setRunning(true)
@@ -78,8 +123,14 @@ export default function TaskDashboard() {
   }
 
   const doneStatuses = [TaskStatus.DONE, TaskStatus.COMPLETE]
-  const pendingTasks = tasks.filter(t => !doneStatuses.includes(t.status))
-  const doneTasks = tasks.filter(t => doneStatuses.includes(t.status))
+  const pendingTasks = useMemo(
+    () => sortTasks(tasks.filter(t => !doneStatuses.includes(t.status)), sortBy),
+    [tasks, sortBy]
+  )
+  const doneTasks = useMemo(
+    () => sortTasks(tasks.filter(t => doneStatuses.includes(t.status)), sortBy),
+    [tasks, sortBy]
+  )
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -107,10 +158,22 @@ export default function TaskDashboard() {
               </TabsTrigger>
             </TabsList>
             <div className="flex flex-col gap-2">
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={runTasks} disabled={running}>
-                  {running ? 'Running…' : 'Run tasks'}
-                </Button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={runTasks} disabled={running}>
+                    {running ? 'Running…' : 'Run tasks'}
+                  </Button>
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortField)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="status">Status</SelectItem>
+                      <SelectItem value="priority">Priority</SelectItem>
+                      <SelectItem value="createdAt">Created at</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button onClick={openCreate}>New task</Button>
               </div>
               {runError && (
