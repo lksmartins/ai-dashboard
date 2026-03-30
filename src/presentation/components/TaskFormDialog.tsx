@@ -133,6 +133,7 @@ export default function TaskFormDialog({
             value={form.description}
             onChange={e => updateForm(f => ({ ...f, description: e.target.value }))}
             rows={3}
+            className="max-h-[50dvh]"
           />
 
           <Select
